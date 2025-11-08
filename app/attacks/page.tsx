@@ -10,7 +10,19 @@ export default function Page() {
   return (
     <main style={{ padding: 24 }}>
       <h1>Shark Incidents by Week</h1>
-      <p>Combined across all years from your JSON.</p>
+      <p className="text-center text-gray-600 text-sm mt-2">
+  The shark attack data is from{" "}
+  <a
+    href="https://dlnr.hawaii.gov/sharks/shark-incidents/incidents-list"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-blue-500 underline hover:text-blue-600"
+  >
+    DLNR Hawaiʻi Shark Incident Database
+  </a>
+  . This dataset includes reported shark attacks in Hawaiʻi from 1995 to 2025,
+  compiled from official state incident reports.
+</p>
       {/* pass the raw data too */}
       <AttackByWeekChart data={attacks as any[]} />
       <SharkInfo />
