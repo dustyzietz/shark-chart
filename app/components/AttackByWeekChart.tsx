@@ -83,20 +83,60 @@ export default function AttackByWeekChart({
   }
 
   const labels = Array.from({ length: 52 }, (_, i) => '')
-  const monthBoundaries = {
-    0: 'Jan',
-    4: 'Feb',
-    8: 'Mar',
-    13: 'Apr',
-    17: 'May',
-    21: 'Jun',
-    26: 'Jul',
-    30: 'Aug',
-    35: 'Sep',
-    39: 'Oct',
-    43: 'Nov',
-    48: 'Dec',
-  } as Record<number, string>
+
+  const monthMarkers = [
+    { label: "Jan", week: 1 },
+    { label: "Feb", week: 5 },
+    { label: "Mar", week: 9 },
+    { label: "Apr", week: 13 },
+    { label: "May", week: 18 },
+    { label: "Jun", week: 22 },
+    { label: "Jul", week: 27 },
+    { label: "Aug", week: 31 },
+    { label: "Sep", week: 36 },
+    { label: "Oct", week: 40 },
+    { label: "Nov", week: 45 },
+    { label: "Dec", week: 49 },
+  ];
+
+  const monthLinesPlugin = {
+    id: "monthLines",
+    afterDraw(chart: any) {
+      const {
+        ctx,
+        chartArea,
+        scales: { x },
+      } = chart;
+      if (!x || !chartArea) return;
+  
+      const { top, bottom } = chartArea;
+  
+      ctx.save();
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.35)"; // slate-300-ish
+      ctx.fillStyle = "#475569"; // slate-600
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.font = "10px system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  
+      monthMarkers.forEach((m) => {
+        // anchor to the actual x scale so it works on mobile
+        const xPos = x.getPixelForValue(m.week - 1);
+        // only draw if inside chart area
+        if (xPos < chartArea.left - 5 || xPos > chartArea.right + 5) return;
+  
+        // vertical line
+        ctx.beginPath();
+        ctx.moveTo(xPos, top);
+        ctx.lineTo(xPos, bottom + 6); // leave space for label
+        ctx.stroke();
+  
+        // label
+        ctx.fillText(m.label, xPos, bottom + 8);
+      });
+  
+      ctx.restore();
+    },
+  };
 
   const data = {
     labels,
@@ -164,24 +204,19 @@ export default function AttackByWeekChart({
       },
     },
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        bottom: 26, // <- gives room for month labels on mobile
+      },
+    },
     scales: {
       x: {
         grid: {
           drawBorder: false,
-          color: (ctx: any) => {
-            const index = ctx?.tick?.value
-            if (index in monthBoundaries) return 'rgba(0,0,0,0.35)'
-            return 'rgba(0,0,0,0.05)'
-          },
-          lineWidth: (ctx: any) => {
-            const index = ctx?.tick?.value
-            if (index in monthBoundaries) return 1.2
-            return 0.4
-          },
+          color: 'rgba(0,0,0,0.05)',
+          lineWidth: 0.4,
         },
-        ticks: {
-          callback: (val: any) => monthBoundaries[val] ?? '',
-        },
+        ticks: { display: false },
       },
       y: {
         beginAtZero: true,
@@ -221,11 +256,15 @@ export default function AttackByWeekChart({
     })
   }
 
+  
+
   return (
     <div className="space-y-4">
-      <div style={{ height: 360 }}>
-        <Line ref={chartRef} data={data} options={options} />
-      </div>
+     <div className="overflow-x-auto">
+  <div className="min-w-[900px] h-[360px]">
+    <Line ref={chartRef} data={data} options={options}  plugins={[monthLinesPlugin]}  />
+  </div>
+</div>
       <p className="text-center text-sm text-gray-500 mt-1">
         Tip: Click the colored labels above to hide or show each dataset.
       </p>
